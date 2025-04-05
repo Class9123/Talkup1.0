@@ -56,13 +56,15 @@ class Alive(RequestHandler):
     
 class Login(RequestHandler):
   async def post(self): 
+    print ("Login")
     data = loads(self.request.body)
     email = data.get("email").strip()
     password = data.get("password").strip()
+    print (email,password)
     if not email or not password:
       print("Email or password not found")
-      self.set_status(500)
-      self.write({"isLoggedIn": "False", "message": "Email and password are required."})
+      self.set_status(200)
+      self.write({"Login": False, "msg": "Email and password are required."})
       return
     query = {"email": email, "password": password}
     result = await mongo.find_user(query)
@@ -74,13 +76,14 @@ class Login(RequestHandler):
       self.write({"Login":True , "credentials": serialize_dict(result) , "msg":"Logined successfully"})
       return 
     self.set_status(200)
-    self.write({"Login":False , "msg" :"Invalid password,Try your best "})
+    self.write({"Login":False , "msg" :"Invalid credentials,Try your best "})
     return
   def get(self):
     self.redirect("/")
 
 class Signup(RequestHandler):
   async def post(self):
+    print("Signup")
     data = loads(self.request.body)
     email = data.get("email")
     password = data.get("password")
@@ -113,7 +116,7 @@ class Signup(RequestHandler):
 @sio.event
 async def disconnect(Usersid):
   print("Disconnected by ", Usersid)
-  print("Logginout thw user ")
+  print("log out the user ")
   Id = key_from_value(ids, Usersid)
   if not Id:
     print(f"Disconnect: No user found for sid {Usersid}")
@@ -139,6 +142,8 @@ async def disconnect(Usersid):
 
 @sio.event 
 async def register(Usersid , credentials):
+  if not credentials:
+    return
   keys_to_check = ["id", "name", "email", "password", "status"]
   all_exist = all(key in credentials for key in keys_to_check)
   if not all_exist:
@@ -308,6 +313,7 @@ async def DeleteAccount(sid, credentials):
 
 
 def make_app():
+  print(os.path.join(os.getcwd(), "dist/assets"))
   return Application([
     (r"/socket.io/", get_tornado_handler(sio)),
     (r"/alive",Alive),

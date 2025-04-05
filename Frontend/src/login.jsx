@@ -49,10 +49,15 @@ function Login() {
     };
     axios.post("/login", dt)
     .then((response) => {
-      let credentials = response.data.credentials
-      setCredentials(credentials)
-      localStorage.setItem("data", JSON.stringify(credentials))
-      socket.emit("register", credentials);
+      let data = response.data
+      if (!data.Login){
+        toast.error(data.msg)
+        return
+      }
+      
+      setCredentials(data.credentials)
+      localStorage.setItem("data", JSON.stringify(data.credentials))
+      socket.emit("register", data.credentials);
       socket.on("take_friends", (response) => {
         setIslogin(true);
         setData(response);
@@ -64,7 +69,7 @@ function Login() {
 
     })
     .catch((error) => {
-      toast.error("Invalid credentials");
+      toast.error("Something wrong happen");
       setLoading(false);
     });
   };
